@@ -85,7 +85,7 @@ crt0.o: crt0.c
 
 
 #_startup.o must be first in link order- else LTO removes IRQ Handlers
-%.out: %.o $(LIBS) crt.o $(STAGE2BOOT)_stage2_boot.o
+%.out: %.o $(LIBS) crt0.o _$(STAGE2BOOT)_stage2_boot.o
 	$(CC) $(CFLAGS) -T $(LINKSCRIPT) --specs=nano.specs -o $@ $^
 	@echo Generated Program has the following segment sizes:
 	@$(OBJSIZE) $@

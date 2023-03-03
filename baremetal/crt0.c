@@ -37,9 +37,11 @@ extern uint32_t __stack_top;
 extern uint32_t __bss_start, __bss_end;
 
 //Functions provided
+static void config_sys_clock();
 
 //Functions needed
 extern void main();
+
 /*Environment Initialization*/
 void __attribute__ ((naked,noreturn,section (".system_startup_code")))
 _reset_init(void)
