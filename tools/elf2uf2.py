@@ -216,6 +216,8 @@ elif ram_segments_present:
 elif flash_segments_present:
     diag("Flash only binary; UF2 will program flash.")
 #Get list of segments
+# DOES NOT CHECK FOR OVERLAP
+# ASSUME there can be non-contiguous segments?
 uf2_data=[]
 segment_data=bytearray()
 seg_paddr=loadable_segments[0].ph_paddr
@@ -231,7 +233,7 @@ for p_hdr in loadable_segments:
         segment_data = segment_data + data
 uf2_data.append( (seg_paddr,segment_data) )
 seg_paddr = p_hdr.ph_paddr
-# create UF2 blocks
+# create UF2 blocks 
 uf2_records = []
 for (paddr,data) in uf2_data:
     diag("Processing %d byte segment at physical address %x"%(len(data),paddr))
