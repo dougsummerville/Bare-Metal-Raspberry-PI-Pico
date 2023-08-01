@@ -8,4 +8,12 @@
  This environment has not yet undergone significant testing but will be updated as bugs are disovered.
  
  # Included Examples
- A sample C program to turn on the red LED on the Pico is provided in the src directory.  To make the UF2, run the command make led_on.uf2 at the prompt in the top level of the hierarchy.
+ A sample C program to flash the LED on the Pico is provided in the src directory.  To make the UF2, run the command 
+
+LIBS="led.o" make test_led.uf2
+
+at the prompt in the top level of the hierarchy (same directory as Makefile).
+
+A C program to demonstrate USB CDC driver is included.  It echos back characters received on the serial port.  To build the UF2 file, run the command
+
+LIBS="usbcdc.o" make test_usbcdc.uf2

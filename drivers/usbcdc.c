@@ -1,3 +1,4 @@
+#include <usbcdc.h>
 #include <rp2040/resets.h>
 #include <rp2040/sio.h>
 #include <rp2040/io_bank0.h>
@@ -7,7 +8,6 @@
 #include <rp2040/usb.h>
 #include <rp2040/pll.h>
 #include <rp2040/m0plus.h>
-#include <stdio.h>
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -39,17 +39,15 @@ static const uint8_t language_string_descriptor[4] =
 	0x09, 0x04
 };
 
-static const uint8_t manufacturer_string_descriptor[20] =
+static const uint8_t manufacturer_string_descriptor[16] =
 {   
 	(uint8_t)sizeof(manufacturer_string_descriptor),0x03,
-	'P',0,
-	'I',0,
-	'C',0,
-	'O',0,
+	'B',0,
+	'U',0,
 	' ',0,
+	'E',0,
 	'C',0,
-	'O',0,
-	'M',0,
+	'E',0,
 	'.',0
 };
 
@@ -83,10 +81,10 @@ static const uint8_t device_descriptor[18] = {
     0x00, // Device subclass
     0x00, // Device Protocol
     MAX_PACKET_SIZE, // Maximum packet size target can process
-    0xdd, // Vendor ID (lsB)
-    0xde, // Vendor ID (msB)
-    0xef, // Product ID (lsb)
-    0xbe, // Product ID (msb)
+    0x28, // Vendor ID (lsB)
+    0x0d, // Vendor ID (msB)
+    0x04, // Product ID (lsb)
+    0x02, // Product ID (msb)
     0x01, // Device Version (lsB)
     0x00, // Device Version (msB)
     0x01, // Index of Manufacturer string descriptor
@@ -372,36 +370,6 @@ static void prepare_in_buffer_on_ep( uint8_t ep )
 	usbram.ep_buffer_ctrl[ep].in[0] = ctrl_val|0x0400; //available several cycles after
 }
 
-static char to_hex(uint8_t a)
-{
-	a=a&0x0f;
-	if( a < 10 )
-		return '0'+a;
-	else
-		return 'a'+a-10;
-}
-/*USB ISR
- */
-char message[64];
-static void set_message(uint32_t x)
-{
-	message[0]='0';
-	message[1]='x';
-	message[2]=to_hex(x>>28);
-	message[3]=to_hex(x>>24);
-	message[4]=to_hex(x>>20);
-	message[5]=to_hex(x>>16);
-	message[6]=to_hex(x>>12);
-	message[7]=to_hex(x>>8);
-	message[8]=to_hex(x>>4);
-	message[9]=to_hex(x);
-	message[10]='\n';
-	message[11]='\r';
-	usbram.ep_state[2].source_data=message;
-	usbram.ep_state[2].bytes_remaining=12;
-	prepare_in_buffer_on_ep(2);
-}
-
 
 /*USB ISR
  *
@@ -538,7 +506,7 @@ void __attribute__((isr)) ISR5()
 	usbctrl -> clr_sie_status = 0xFFFFFFFF;
 }
 
-void configure_usb()
+void configure_usbcdc()
 {
 	/*
 	 * Configure USB PLL.  
@@ -660,69 +628,22 @@ void configure_usb()
 	usbctrl -> set_sie_ctrl = USBCTRL_SIE_CTRL_PULLUP_EN(1);
 }
 
-void configure_btn()
+_Bool usbcdc_getchar(char *c)
 {
-    resets -> clr_reset = RESETS_RESET_IO_QSPI_MASK ;
-    while(! (resets -> reset_done & RESETS_RESET_DONE_IO_QSPI_MASK))
-    	continue;
-    resets -> clr_reset = RESETS_RESET_PADS_QSPI_MASK ;
-    while(! (resets -> reset_done & RESETS_RESET_DONE_PADS_QSPI_MASK))
-    	continue;
-    io_qspi -> gpio_qspi_ss_ctrl=IO_QSPI_GPIO_QSPI_SS_CTRL_OEOVER(2);
-}
-_Bool btn_is_released()
-{
-	return sio->gpio_hi_in & (1<<1);
-}
-_Bool btn_is_pressed()
-{
-	return !btn_is_released();
-}
-
-/*
-static uint8_t getchar()
-{
-	uint8_t retval;
-	while( rxbuf_is_empty() )
-		continue;
-	retval = rx_buffer.buf[rx_buffer.tail];
+	if( rxbuf_is_empty() )
+		return false;
+	*c = rx_buffer.buf[rx_buffer.tail];
 	rx_buffer.tail = rxtail_next();
-	return retval;
+	return true;
 }
-static void putchar( uint8_t c)
+_Bool usbcdc_putchar( char c)
 {
-	while( txbuf_is_full() )
-		continue;
+	if( txbuf_is_full() )
+		return false;
 	//does not need to be atomic because ISR only moves tail
 	tx_buffer.buf[tx_buffer.head] = c;
 	tx_buffer.head = txhead_next();
 	//if no pending transmit then we need to start the transmit which
 	//happens in ISR.  We can queue up xxxzero_len OUT packet
 	send_data_to_host();
-}
-void print( char *s)
-{
-	while( *s )
-		putchar(*s++);
-}
-*/
-
-int main ( void )
-{
-
-    asm("cpsid i");
-    configure_led();
-    //*(uint32_t *)0x40058000 = 0;//disable dog
-    configure_btn();
-    configure_usb();
-    asm("cpsie i");
-    turn_on_led();
-    _Bool last=0;
-    while(1)
-    {
-	if( btn_is_pressed() && !last)
-	    printf("%x\n\r",0xdeadbeef);
-		//print("This is a test of the emergency broadcasting system\n\r");
-    }
-    return(0);
 }
