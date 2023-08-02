@@ -646,4 +646,5 @@ _Bool usbcdc_putchar( char c)
 	//if no pending transmit then we need to start the transmit which
 	//happens in ISR.  We can queue up xxxzero_len OUT packet
 	send_data_to_host();
+	return true;
 }
