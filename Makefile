@@ -31,8 +31,8 @@ OBJDUMP = arm-none-eabi-objdump
 OBJSIZE = arm-none-eabi-size
 ELF2UF2 = tools/elf2uf2.py
 INSERT_CHECKSUM_INTO_ELF = tools/checksum_pico_elf.py
-INCLUDES = -Idrivers -Ibaremetal/include
-VPATH = src:drivers:baremetal
+INCLUDES = -Idrivers -Ibaremetal/include -Ilib
+VPATH = src:drivers:baremetal:lib
 SYS_CLOCK = 125000000L
 -include config.make
 
