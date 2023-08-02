@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef SYSINFO_H
-#define SYSINFO_H
+#ifndef RP2040_SYSINFO_H
+#define RP2040_SYSINFO_H
 
 #include <stdint.h>
 

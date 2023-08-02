@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef CLOCKS_H
-#define CLOCKS_H
+#ifndef RP2040_CLOCKS_H
+#define RP2040_CLOCKS_H
 
 #include <stdint.h>
 

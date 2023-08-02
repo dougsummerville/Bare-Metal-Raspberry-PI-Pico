@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef IO_QSPI_H
-#define IO_QSPI_H
+#ifndef RP2040_IO_QSPI_H
+#define RP2040_IO_QSPI_H
 
 #include <stdint.h>
 

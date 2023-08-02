@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef UART_H
-#define UART_H
+#ifndef RP2040_UART_H
+#define RP2040_UART_H
 
 #include <stdint.h>
 

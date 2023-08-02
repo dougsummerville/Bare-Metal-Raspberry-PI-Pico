@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef BUSCTRL_H
-#define BUSCTRL_H
+#ifndef RP2040_BUSCTRL_H
+#define RP2040_BUSCTRL_H
 
 #include <stdint.h>
 

@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef TBMAN_H
-#define TBMAN_H
+#ifndef RP2040_TBMAN_H
+#define RP2040_TBMAN_H
 
 #include <stdint.h>
 

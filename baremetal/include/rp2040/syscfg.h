@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef SYSCFG_H
-#define SYSCFG_H
+#ifndef RP2040_SYSCFG_H
+#define RP2040_SYSCFG_H
 
 #include <stdint.h>
 

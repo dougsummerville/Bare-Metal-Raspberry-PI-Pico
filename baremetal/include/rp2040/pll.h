@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PLL_H
-#define PLL_H
+#ifndef RP2040_PLL_H
+#define RP2040_PLL_H
 
 #include <stdint.h>
 

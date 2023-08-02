@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef VREG_AND_CHIP_RESET_H
-#define VREG_AND_CHIP_RESET_H
+#ifndef RP2040_VREG_AND_CHIP_RESET_H
+#define RP2040_VREG_AND_CHIP_RESET_H
 
 #include <stdint.h>
 

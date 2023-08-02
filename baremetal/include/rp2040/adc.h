@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef ADC_H
-#define ADC_H
+#ifndef RP2040_ADC_H
+#define RP2040_ADC_H
 
 #include <stdint.h>
 

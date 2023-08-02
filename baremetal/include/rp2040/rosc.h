@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef ROSC_H
-#define ROSC_H
+#ifndef RP2040_ROSC_H
+#define RP2040_ROSC_H
 
 #include <stdint.h>
 

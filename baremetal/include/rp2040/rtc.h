@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef RTC_H
-#define RTC_H
+#ifndef RP2040_RTC_H
+#define RP2040_RTC_H
 
 #include <stdint.h>
 

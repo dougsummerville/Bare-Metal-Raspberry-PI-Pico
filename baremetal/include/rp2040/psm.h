@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PSM_H
-#define PSM_H
+#ifndef RP2040_PSM_H
+#define RP2040_PSM_H
 
 #include <stdint.h>
 

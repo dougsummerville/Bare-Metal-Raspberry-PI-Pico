@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PADS_BANK0_H
-#define PADS_BANK0_H
+#ifndef RP2040_PADS_BANK0_H
+#define RP2040_PADS_BANK0_H
 
 #include <stdint.h>
 

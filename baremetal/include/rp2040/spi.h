@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef SPI_H
-#define SPI_H
+#ifndef RP2040_SPI_H
+#define RP2040_SPI_H
 
 #include <stdint.h>
 

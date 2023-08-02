@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef I2C_H
-#define I2C_H
+#ifndef RP2040_I2C_H
+#define RP2040_I2C_H
 
 #include <stdint.h>
 

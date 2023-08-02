@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef SIO_H
-#define SIO_H
+#ifndef RP2040_SIO_H
+#define RP2040_SIO_H
 
 #include <stdint.h>
 

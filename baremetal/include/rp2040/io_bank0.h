@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef IO_BANK0_H
-#define IO_BANK0_H
+#ifndef RP2040_IO_BANK0_H
+#define RP2040_IO_BANK0_H
 
 #include <stdint.h>
 

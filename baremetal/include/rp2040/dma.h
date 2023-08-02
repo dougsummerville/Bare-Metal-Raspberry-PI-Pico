@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef DMA_H
-#define DMA_H
+#ifndef RP2040_DMA_H
+#define RP2040_DMA_H
 
 #include <stdint.h>
 

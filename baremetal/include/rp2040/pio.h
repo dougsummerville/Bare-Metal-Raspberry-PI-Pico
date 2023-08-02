@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PIO_H
-#define PIO_H
+#ifndef RP2040_PIO_H
+#define RP2040_PIO_H
 
 #include <stdint.h>
 

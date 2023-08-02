@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef WATCHDOG_H
-#define WATCHDOG_H
+#ifndef RP2040_WATCHDOG_H
+#define RP2040_WATCHDOG_H
 
 #include <stdint.h>
 

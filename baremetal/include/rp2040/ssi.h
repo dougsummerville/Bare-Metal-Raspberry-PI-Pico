@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef SSI_H
-#define SSI_H
+#ifndef RP2040_SSI_H
+#define RP2040_SSI_H
 
 #include <stdint.h>
 

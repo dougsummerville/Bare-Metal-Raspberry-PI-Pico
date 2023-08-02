@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef XOSC_H
-#define XOSC_H
+#ifndef RP2040_XOSC_H
+#define RP2040_XOSC_H
 
 #include <stdint.h>
 

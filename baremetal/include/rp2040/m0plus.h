@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef M0PLUS_H
-#define M0PLUS_H
+#ifndef RP2040_M0PLUS_H
+#define RP2040_M0PLUS_H
 
 #include <stdint.h>
 

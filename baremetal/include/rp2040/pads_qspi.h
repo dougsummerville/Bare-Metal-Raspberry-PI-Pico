@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PADS_QSPI_H
-#define PADS_QSPI_H
+#ifndef RP2040_PADS_QSPI_H
+#define RP2040_PADS_QSPI_H
 
 #include <stdint.h>
 

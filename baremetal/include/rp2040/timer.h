@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef TIMER_H
-#define TIMER_H
+#ifndef RP2040_TIMER_H
+#define RP2040_TIMER_H
 
 #include <stdint.h>
 

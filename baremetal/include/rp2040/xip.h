@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef XIP_H
-#define XIP_H
+#ifndef RP2040_XIP_H
+#define RP2040_XIP_H
 
 #include <stdint.h>
 

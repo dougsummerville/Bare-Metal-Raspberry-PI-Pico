@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef USB_H
-#define USB_H
+#ifndef RP2040_USB_H
+#define RP2040_USB_H
 
 #include <stdint.h>
 

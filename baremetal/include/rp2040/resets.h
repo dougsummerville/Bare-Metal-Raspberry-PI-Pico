@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef RESETS_H
-#define RESETS_H
+#ifndef RP2040_RESETS_H
+#define RP2040_RESETS_H
 
 #include <stdint.h>
 
