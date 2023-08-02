@@ -252,7 +252,7 @@ static rxbuf_t rxbuf;
 //should get inlined but up to compiler optimizations
 static uint32_t txhead_next() { return (tx_buffer.head+1)%TXBUF_SIZE; }
 static uint32_t txtail_next() { return (tx_buffer.tail+1)%TXBUF_SIZE; }
-static _Bool txbuf_is_empty() { return tx_buffer.head == tx_buffer.tail; }
+//Not used static _Bool txbuf_is_empty() { return tx_buffer.head == tx_buffer.tail; }
 static _Bool txbuf_is_full() { return txhead_next() == tx_buffer.tail; }
 static uint32_t txbuf_len() { return (tx_buffer.head-tx_buffer.tail)&(TXBUF_SIZE-1);}
 static uint32_t rxhead_next() { return (rx_buffer.head+1)%RXBUF_SIZE; }
