@@ -50,14 +50,15 @@ CFLAGSS = -ffreestanding -nostartfiles \
 ASFLAGS = -mcpu=$(TARGET) -mthumb
 STAGE2BOOT=copy_to_ram
 LINKSCRIPT=baremetal/$(STAGE2BOOT).ld 
+NUM_UF2S := $(shell  ls -dq *.uf2 2>/dev/null | wc -l)
 
-.PHONY:	clean usage program
+.PHONY:	clean usage program board_plugged_in
 
 # -----------------------------------------------------------------------------
 
 usage: 
 	@echo To build an application:
-	@echo "     "LIBS=\"list of drivers\" make file.srec
+	@echo "     "LIBS=\"list of drivers\" make file.uf2
 	@echo ""
 
 
@@ -90,5 +91,19 @@ crt0.o: crt0.c
 	@echo Generated Program has the following segment sizes:
 	@$(OBJSIZE) $@
 
-program: test.uf2
-	cp test.uf2 /media/dsummer/RPI-RP2/
+board_plugged_in:
+ifeq ($(wildcard /media/$(USER)/RPI-RP2),)
+	$(error Raspberry PI not plugged in or not in program mode)
+else
+	@echo Raspberry Pi Pico found at $(wildcard /media/$(USER)/RPI-RP2)
+endif
+program: board_plugged_in
+ifeq ($(NUM_UF2S),0)
+	$(error No UF2 file exists in the current directory)
+else
+ifeq ($(NUM_UF2S),1)
+	cp $(wildcard *.uf2) /media/dsummer/RPI-RP2/
+else
+	$(error There is more than one UF2 file in the current directory)  
+endif
+endif
