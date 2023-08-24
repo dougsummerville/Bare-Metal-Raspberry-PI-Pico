@@ -7,6 +7,9 @@
 # Status
  This environment has not yet undergone significant testing but will be updated as bugs are disovered.
  
+#Accessing Hardware Registers
+A Each peripheral (e.g. UART) and CPU subsystem (e.g. PLL) has an include file (e.g. rp2040/pll.h) that should be included to use the register definitions and field macros.  The register block for a peripheral is overlayed with a struct pointer with the same name as the peripheral.  To access a register, use struct pointer notation. For example, the RP2040 datasheet shows pll_sys has a cs register;this would be accessed using pll_sys->cs.  To use the atomic versions of the registers, append _xor, _set, or _clr to the register name.  The included example should make this clear.
+
 # Included Examples
  A sample C program to flash the LED on the Pico is provided in the src directory.  To make the UF2, run the command 
 
