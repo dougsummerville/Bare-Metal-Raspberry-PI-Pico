@@ -487,8 +487,8 @@ void configure_usbcdc()
 	 */
 	
 	//un-reset USB PLL and poll until reset is deasserted
-	resets -> clr_reset  =  RESETS_RESET_PLL_USB_MASK; 
-	while(!(resets -> reset_done & RESETS_RESET_DONE_PLL_SYS_MASK))
+	resets -> clr_reset  =  RESETS_RESET_PLL_USB_MASK;
+	while(!(resets -> reset_done & RESETS_RESET_DONE_PLL_USB_MASK))
 		continue;
 	//config for 12x48MHz, disable power bits to start, and wait for lock
 	pll_usb -> cs = PLL_USB_CS_REFDIV(1);

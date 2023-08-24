@@ -58,6 +58,9 @@ _reset_init(void)
 	//init clock
 	config_sys_clock();
 
+	//reset all peripherals except pll_sys
+	resets->set_reset = 0x01ffefff;
+
 	//clear BSS
 	uint32_t *p = &__bss_start;
 	while( p < &__bss_end )
