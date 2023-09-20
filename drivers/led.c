@@ -1,3 +1,4 @@
+#include "led.h"
 #include <rp2040/resets.h>
 #include <rp2040/sio.h>
 #include <rp2040/io_bank0.h>
