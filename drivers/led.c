@@ -31,6 +31,8 @@ void configure_led( void )
 	IO_BANK0_GPIO25_CTRL_OEOVER(0)  |
 	IO_BANK0_GPIO25_CTRL_OUTOVER(0) |
 	IO_BANK0_GPIO25_CTRL_FUNCSEL(5);
+
+    sio->gpio_oe_set = (1<<25);
 }
 void turn_on_led()
 {
