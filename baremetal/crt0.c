@@ -87,16 +87,16 @@ static void config_sys_clock()
 	while(!(resets -> reset_done & RESETS_RESET_DONE_PLL_SYS_MASK))
 		continue;
 
-	//config SYS PLL for 133 MHz CPU clock
+	//config SYS PLL for 125 MHz CPU clock
 	pll_sys -> cs = PLL_SYS_CS_REFDIV(1);
-	pll_sys -> fbdiv_int = 133; //12MHz x 125 FCO = 1596 MHz
+	pll_sys -> fbdiv_int = 125; //12MHz x 125 FCO = 1596 MHz
 	//disable power save bits to start PLL
 	pll_sys -> clr_pwr = PLL_SYS_PWR_PD_MASK | PLL_SYS_PWR_VCOPD_MASK;
 	//wait for PLL to lock
 	while( !((pll_sys->cs) & PLL_SYS_CS_LOCK_MASK))
 		continue;
 	//config post dividers for divide-by-6-by-2, which gets PLL ouput
-	//to 133*12/6/2 = 125 MHz
+	//to 125*12/6/2 = 125 MHz
 	pll_sys -> prim  =  PLL_SYS_PRIM_POSTDIV1(6) | PLL_SYS_PRIM_POSTDIV2(2);
 	pll_sys -> clr_pwr = PLL_SYS_PWR_POSTDIVPD_MASK;
 	

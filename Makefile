@@ -102,7 +102,7 @@ ifeq ($(NUM_UF2S),0)
 	$(error No UF2 file exists in the current directory)
 else
 ifeq ($(NUM_UF2S),1)
-	cp $(wildcard *.uf2) /media/dsummer/RPI-RP2/
+	cp $(wildcard *.uf2) /media/$(USER)/RPI-RP2/
 else
 	$(error There is more than one UF2 file in the current directory)  
 endif
