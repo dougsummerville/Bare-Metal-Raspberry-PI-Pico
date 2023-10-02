@@ -1,6 +1,6 @@
 # Makefile for Bare-metal Pi Pico C Environment
 #
-# Copyright (c) 2022 Douglas H. Summerville, Binghamton University
+# Copyright (c) 2022-2023 Douglas H. Summerville, Binghamton University
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to
