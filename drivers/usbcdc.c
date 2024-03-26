@@ -54,7 +54,7 @@
 //and buffers must be at least 2 but should be much bigger
 ////RX BUF must be at least 128
 #define TXBUF_SIZE 2048
-#define RXBUF_SIZE 128
+#define RXBUF_SIZE 1024
 
 static const uint8_t language_string_descriptor[4] = 
 { 
@@ -437,7 +437,7 @@ void __attribute__((isr)) ISR5()
 				rx_buffer.head = rxhead_next();
 				i++;
 			}
-			if( rxbuf_free() >= 64 )
+			if( rxbuf_free() >= 128 )
 				free_ep_output_buf_and_toggle_data_sync(3);
 			else
 				usbram.ep_state[3].stalled = 1;
@@ -641,7 +641,7 @@ _Bool usbcdc_getchar(char *c)
 		return false;
 	*c = rx_buffer.buf[rx_buffer.tail];
 	rx_buffer.tail = rxtail_next();
-	if( rxbuf_free() >= 64 &&  usbram.ep_state[3].stalled )
+	if( rxbuf_free() >= 128 &&  usbram.ep_state[3].stalled )
 		free_ep_output_buf_and_toggle_data_sync(3);
 	return true;
 }
