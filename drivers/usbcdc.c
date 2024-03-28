@@ -166,14 +166,14 @@ static const uint8_t config_descriptor[0x43] = {
 		0x82,        // bEndpointAddress (IN)
 		0x02,        // bmAttributes (Bulk)
 		MAX_PACKET_SIZE, 0x00,  // wMaxPacketSize 64
-		0x00,        // bInterval 0 (unit depends on device speed)
+		0x00,        // bInterval 0 (ignored)
 		//EP 3
 		0x07,        // bLength
 		0x05,        // bDescriptorType (Endpoint)
 		0x03,        // bEndpointAddress (OUT)
 		0x02,        // bmAttributes (Bulk)
 		0x40, 0x00,  // wMaxPacketSize 100
-		0x00,        // bInterval 0 (unit depends on device speed)
+		0x00,        // bInterval 0 (ignored)
 };
 
 
@@ -229,7 +229,7 @@ typedef struct {
 		uint32_t bytes_remaining;
 		uint8_t const *source_data;
 		uint8_t *buffer;
-		_Bool data01,stalled;
+		_Bool data01;
 } ep_state_t;
 
 #define NUM_DATA_BUFFERS 3
@@ -281,13 +281,13 @@ static uint32_t txtail_next() { return (tx_buffer.tail+1)%TXBUF_SIZE; }
 //Not used static _Bool txbuf_is_empty() { return tx_buffer.head == tx_buffer.tail; }
 static _Bool txbuf_is_full() { return txhead_next() == tx_buffer.tail; }
 static uint32_t txbuf_len() { return (tx_buffer.head-tx_buffer.tail)&(TXBUF_SIZE-1);}
-static uint32_t rxbuf_free() { return RXBUF_SIZE-1-((rx_buffer.head-rx_buffer.tail)&(RXBUF_SIZE-1));}
+//static uint32_t rxbuf_free() { return RXBUF_SIZE-1-((rx_buffer.head-rx_buffer.tail)&(RXBUF_SIZE-1));}
 static uint32_t rxhead_next() { return (rx_buffer.head+1)%RXBUF_SIZE; }
 static uint32_t rxtail_next() { return (rx_buffer.tail+1)%RXBUF_SIZE; }
 static _Bool rxbuf_is_empty() { return rx_buffer.head == rx_buffer.tail; }
 static _Bool rxbuf_is_full() { return rxhead_next() == rx_buffer.tail; }
 /*
- * Prepare a descriptor on EP2 from TX Ring Buf iff buffer is free
+ * Prepare a descriptor on EP2 from TX Ring buf iff buffer is free
  */
 static void send_data_to_host()
 {
@@ -333,7 +333,6 @@ typedef struct {
 static void clear_ep_state( unsigned ep)
 {
 		usbram.ep_state[ep].data01=0;
-		usbram.ep_state[ep].stalled=0;
 		usbram.ep_state[ep].bytes_remaining=0;
 }
 
@@ -353,7 +352,6 @@ static void free_ep_output_buf_and_toggle_data_sync( uint8_t ep )
 	uint16_t ctrl_buf_reg_val = MAX_PACKET_SIZE + (usbram.ep_state[ep].data01 ? 0x2000 : 0x0000); //data01 bit
 	usbram.ep_buffer_ctrl[ep].out[0] = ctrl_buf_reg_val ;
 	usbram.ep_state[ep].data01 = !usbram.ep_state[ep].data01; //satisfies delay before setting AVAIL
-	usbram.ep_state[ep].stalled = 0; //satisfies delay before setting AVAIL
 	usbram.ep_buffer_ctrl[ep].out[0] = (ctrl_buf_reg_val | 0x0400 ); //set AVAIL
 }
 
@@ -380,7 +378,6 @@ static void prepare_in_buffer_on_ep( uint8_t ep )
 void __attribute__((isr)) ISR5() 
 {
 	uint32_t ints_req = usbctrl -> ints; //read once saves repeated volatile loads
-
 	/*Received a USB reset 
 	 */
 	if( ints_req  & USBCTRL_INTS_BUS_RESET_MASK )
@@ -426,7 +423,8 @@ void __attribute__((isr)) ISR5()
 		}
 
 		//EP3 OUT is main data source from host
-		if( ep_status & USBCTRL_BUFF_STATUS_EP3_OUT_MASK )
+		//if( ep_status & USBCTRL_BUFF_STATUS_EP3_OUT_MASK )
+		if( !(usbram.ep_buffer_ctrl[3].out[0] & 0x0400 ))
 		{
 			//expected to be less than 64
 			uint8_t byte_cnt = usbram.ep_buffer_ctrl[3].out[0] & 0x3ff;
@@ -437,10 +435,7 @@ void __attribute__((isr)) ISR5()
 				rx_buffer.head = rxhead_next();
 				i++;
 			}
-			if( rxbuf_free() >= 128 )
-				free_ep_output_buf_and_toggle_data_sync(3);
-			else
-				usbram.ep_state[3].stalled = 1;
+			free_ep_output_buf_and_toggle_data_sync(3);
 		}
 	}
 
@@ -517,7 +512,6 @@ void configure_usbcdc()
 	/*
 	 * Configure USB PLL.  
 	 */
-	
 	//un-reset USB PLL and poll until reset is deasserted
 	resets -> clr_reset  =  RESETS_RESET_PLL_USB_MASK;
 	while(!(resets -> reset_done & RESETS_RESET_DONE_PLL_USB_MASK))
@@ -582,7 +576,8 @@ void configure_usbcdc()
 		| USBCTRL_MAIN_CTRL_HOST_NDEVICE(0);
 	//IRQ enabled for endpoint 0
 	//usbctrl -> set_sie_ctrl = USBCTRL_SIE_CTRL_EP0_INT_1BUF_MASK;
-	usbctrl -> sie_ctrl = USBCTRL_SIE_CTRL_EP0_INT_1BUF(1);
+	usbctrl -> sie_ctrl = USBCTRL_SIE_CTRL_EP0_INT_1BUF(1)
+		| USBCTRL_SIE_CTRL_RPU_OPT_MASK;
 	usbctrl -> set_inte = 
 		 USBCTRL_INTE_BUS_RESET(1)
 	 	|USBCTRL_INTE_SETUP_REQ(1)
@@ -637,24 +632,27 @@ void configure_usbcdc()
 
 _Bool usbcdc_getchar(char *c)
 {
+	_Bool retval=true;
 	if( rxbuf_is_empty() )
-		return false;
-	*c = rx_buffer.buf[rx_buffer.tail];
-	rx_buffer.tail = rxtail_next();
-	if( rxbuf_free() >= 128 &&  usbram.ep_state[3].stalled )
-		free_ep_output_buf_and_toggle_data_sync(3);
-	return true;
+		retval=false;
+	else
+	{
+		*c = rx_buffer.buf[rx_buffer.tail];
+		rx_buffer.tail = rxtail_next();
+	}
+	return retval;
 }
 _Bool usbcdc_putchar( char c)
 {
 //TODO: Need a way to wait until enumeration completes.  ADDRESS??
 	if( txbuf_is_full() )
 		return false;
-	//does not need to be atomic because ISR only moves tail
+	uint32_t primask;
+	__asm__ volatile ("MRS %0, primask" : "=r" (primask) );
+	asm volatile ("CPSID I");
 	tx_buffer.buf[tx_buffer.head] = c;
 	tx_buffer.head = txhead_next();
-	//if no pending transmit then we need to start the transmit which
-	//happens in ISR.  We can queue up xxxzero_len OUT packet
 	send_data_to_host();
+	__asm__ volatile ("MSR primask, %0" : : "r" (primask) );
 	return true;
 }
