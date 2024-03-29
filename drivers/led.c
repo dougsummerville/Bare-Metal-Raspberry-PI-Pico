@@ -4,16 +4,12 @@
 #include <rp2040/io_bank0.h>
 #include <rp2040/pads_bank0.h>
 
+#define LED_RESETS (RESETS_RESET_IO_BANK0_MASK | RESETS_RESET_PADS_BANK0_MASK)
 void configure_led( void )
 {
-    resets -> clr_reset = 
-	    RESETS_RESET_IO_BANK0_MASK
-	    | RESETS_RESET_PADS_BANK0_MASK;
+    resets -> clr_reset = LED_RESETS;
 
-    while(! (resets -> reset_done & RESETS_RESET_IO_BANK0_MASK))
-    	continue;
-
-    while(! (resets -> reset_done & RESETS_RESET_PADS_BANK0_MASK))
+    while((resets -> reset_done & LED_RESETS ) != LED_RESETS )
     	continue;
 
     pads_bank0 -> gpio25 = 

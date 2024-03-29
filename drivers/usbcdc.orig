@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2024 Douglas H. Summerville, Binghamton University 
+ * Copyright (c) 2022-2023 Douglas H. Summerville, Binghamton University 
  *
  * Permission is hereby granted, free of charge, to any person obtaining a 
  * copy of this software and associated documentation files (the "Software"),
@@ -52,9 +52,8 @@
 
 //code optimizations used require ring buffers to be powers of 2 
 //and buffers must be at least 2 but should be much bigger
-////RX BUF must be at least 128
-#define TXBUF_SIZE 2048
-#define RXBUF_SIZE 1024
+#define TXBUF_SIZE 1024
+#define RXBUF_SIZE 2048
 
 static const uint8_t language_string_descriptor[4] = 
 { 
@@ -166,14 +165,14 @@ static const uint8_t config_descriptor[0x43] = {
 		0x82,        // bEndpointAddress (IN)
 		0x02,        // bmAttributes (Bulk)
 		MAX_PACKET_SIZE, 0x00,  // wMaxPacketSize 64
-		0x00,        // bInterval 0 (ignored)
+		0x00,        // bInterval 0 (unit depends on device speed)
 		//EP 3
 		0x07,        // bLength
 		0x05,        // bDescriptorType (Endpoint)
 		0x03,        // bEndpointAddress (OUT)
 		0x02,        // bmAttributes (Bulk)
 		0x40, 0x00,  // wMaxPacketSize 100
-		0x00,        // bInterval 0 (ignored)
+		0x00,        // bInterval 0 (unit depends on device speed)
 };
 
 
@@ -208,9 +207,6 @@ static const uint8_t line_coding[7] = {
 
 #if !is_power_of_2(TXBUF_SIZE )
 #error "TXBUF_SIZE is not a power of 2"
-#endif
-#if !is_power_of_2(RXBUF_SIZE ) || RXBUF_SIZE < 128
-#error "RXBUF_SIZE is not a power of 2 or at least 128"
 #endif
 
 /* Structure of DPRAM
@@ -278,25 +274,21 @@ static rxbuf_t rxbuf;
 //should get inlined but up to compiler optimizations
 static uint32_t txhead_next() { return (tx_buffer.head+1)%TXBUF_SIZE; }
 static uint32_t txtail_next() { return (tx_buffer.tail+1)%TXBUF_SIZE; }
-static _Bool txbuf_is_empty() { return tx_buffer.head == tx_buffer.tail; }
+//Not used static _Bool txbuf_is_empty() { return tx_buffer.head == tx_buffer.tail; }
 static _Bool txbuf_is_full() { return txhead_next() == tx_buffer.tail; }
 static uint32_t txbuf_len() { return (tx_buffer.head-tx_buffer.tail)&(TXBUF_SIZE-1);}
-//static uint32_t rxbuf_free() { return RXBUF_SIZE-1-((rx_buffer.head-rx_buffer.tail)&(RXBUF_SIZE-1));}
 static uint32_t rxhead_next() { return (rx_buffer.head+1)%RXBUF_SIZE; }
 static uint32_t rxtail_next() { return (rx_buffer.tail+1)%RXBUF_SIZE; }
 static _Bool rxbuf_is_empty() { return rx_buffer.head == rx_buffer.tail; }
 static _Bool rxbuf_is_full() { return rxhead_next() == rx_buffer.tail; }
 /*
- * Prepare a descriptor on EP2 from TX Ring buf iff there is TX data and
- * buffer free and device enumerated
+ * Prepare a descriptor on EP2 from TX Ring Buf iff buffer is free
  */
-static void prepare_out_to_host()
+static void send_data_to_host()
 {
-	//since this is called for every putchar and every USB ISR
-	//try to make common case return first
-	if( txbuf_is_empty() || usbram.ep_buffer_ctrl[2].in[0] & (1<<15 ) || usbctrl -> addr_endp == 0 )
-		return;
 	uint8_t desc_len = min(MAX_PACKET_SIZE, txbuf_len());
+	if( !desc_len || usbram.ep_buffer_ctrl[2].in[0] & (1<<15 )) //buffer in use
+		return;
 	for( unsigned i=0; i<desc_len; i++ )
 	{
 		usbram.ep_state[2].buffer[i]= tx_buffer.buf[tx_buffer.tail];
@@ -355,7 +347,7 @@ static void free_ep_output_buf_and_toggle_data_sync( uint8_t ep )
 	uint16_t ctrl_buf_reg_val = MAX_PACKET_SIZE + (usbram.ep_state[ep].data01 ? 0x2000 : 0x0000); //data01 bit
 	usbram.ep_buffer_ctrl[ep].out[0] = ctrl_buf_reg_val ;
 	usbram.ep_state[ep].data01 = !usbram.ep_state[ep].data01; //satisfies delay before setting AVAIL
-	usbram.ep_buffer_ctrl[ep].out[0] = (ctrl_buf_reg_val | 0x0400 ); //set AVAIL
+	usbram.ep_buffer_ctrl[ep].out[0] = (ctrl_buf_reg_val | 0x0400); //set AVAIL
 }
 
 /*Helper function to copy up to next MAX_PACKET_SIZE bytes to EP IN buffer
@@ -381,6 +373,7 @@ static void prepare_in_buffer_on_ep( uint8_t ep )
 void __attribute__((isr)) ISR5() 
 {
 	uint32_t ints_req = usbctrl -> ints; //read once saves repeated volatile loads
+
 	/*Received a USB reset 
 	 */
 	if( ints_req  & USBCTRL_INTS_BUS_RESET_MASK )
@@ -419,8 +412,14 @@ void __attribute__((isr)) ISR5()
 			}
 		}
 		
+		//EP2 is main data sink to host
+		if( ep_status & USBCTRL_BUFF_STATUS_EP2_IN_MASK )
+		{
+			send_data_to_host();
+		}
+
 		//EP3 OUT is main data source from host
-		if( !(usbram.ep_buffer_ctrl[3].out[0] & 0x0400 ))
+		if( ep_status & USBCTRL_BUFF_STATUS_EP3_OUT_MASK )
 		{
 			//expected to be less than 64
 			uint8_t byte_cnt = usbram.ep_buffer_ctrl[3].out[0] & 0x3ff;
@@ -497,8 +496,7 @@ void __attribute__((isr)) ISR5()
 		usbram.ep_state[0].source_data = desc_ptr;
 		prepare_in_buffer_on_ep(0);
 	}
-	//prepare an out packet if necessary and enumerated
-	prepare_out_to_host();
+	
 	//Everything has been handled so ACK IRQ 
 	usbctrl -> clr_buff_status = 0xFFFFFFFF;
 	usbctrl -> clr_sie_status = 0xFFFFFFFF;
@@ -509,6 +507,7 @@ void configure_usbcdc()
 	/*
 	 * Configure USB PLL.  
 	 */
+	
 	//un-reset USB PLL and poll until reset is deasserted
 	resets -> clr_reset  =  RESETS_RESET_PLL_USB_MASK;
 	while(!(resets -> reset_done & RESETS_RESET_DONE_PLL_USB_MASK))
@@ -555,7 +554,6 @@ void configure_usbcdc()
 	//Enable USB IRQ (5) and set priority, clear pending for good measure
 	((uint32_t *)(0x20000000))[16+5]= (uint32_t)ISR5;
 	m0plus -> nvic_iser = M0PLUS_NVIC_ISER_SETENA(1<<5);
-//TODO: this needs to use masking.
 	m0plus -> nvic_ipr1 = M0PLUS_NVIC_IPR1_IP_5(USB_IRQ_PRIORITY); 
 	m0plus -> nvic_icpr = M0PLUS_NVIC_ICPR_CLRPEND(1<<5);
 
@@ -573,8 +571,7 @@ void configure_usbcdc()
 		| USBCTRL_MAIN_CTRL_HOST_NDEVICE(0);
 	//IRQ enabled for endpoint 0
 	//usbctrl -> set_sie_ctrl = USBCTRL_SIE_CTRL_EP0_INT_1BUF_MASK;
-	usbctrl -> sie_ctrl = USBCTRL_SIE_CTRL_EP0_INT_1BUF(1)
-		| USBCTRL_SIE_CTRL_RPU_OPT_MASK;
+	usbctrl -> sie_ctrl = USBCTRL_SIE_CTRL_EP0_INT_1BUF(1);
 	usbctrl -> set_inte = 
 		 USBCTRL_INTE_BUS_RESET(1)
 	 	|USBCTRL_INTE_SETUP_REQ(1)
@@ -629,26 +626,21 @@ void configure_usbcdc()
 
 _Bool usbcdc_getchar(char *c)
 {
-	_Bool retval=true;
 	if( rxbuf_is_empty() )
-		retval=false;
-	else
-	{
-		*c = rx_buffer.buf[rx_buffer.tail];
-		rx_buffer.tail = rxtail_next();
-	}
-	return retval;
+		return false;
+	*c = rx_buffer.buf[rx_buffer.tail];
+	rx_buffer.tail = rxtail_next();
+	return true;
 }
 _Bool usbcdc_putchar( char c)
 {
 	if( txbuf_is_full() )
 		return false;
-	uint32_t primask;
-	__asm__ volatile ("MRS %0, primask" : "=r" (primask) );
-	asm volatile ("CPSID I");
+	//does not need to be atomic because ISR only moves tail
 	tx_buffer.buf[tx_buffer.head] = c;
 	tx_buffer.head = txhead_next();
-	prepare_out_to_host();
-	__asm__ volatile ("MSR primask, %0" : : "r" (primask) );
+	//if no pending transmit then we need to start the transmit which
+	//happens in ISR.  We can queue up xxxzero_len OUT packet
+	send_data_to_host();
 	return true;
 }
