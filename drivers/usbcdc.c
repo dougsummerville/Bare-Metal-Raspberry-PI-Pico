@@ -532,11 +532,8 @@ void configure_usbcdc()
 		 CLOCKS_CLK_USB_CTRL_AUXSRC(0) 
 		|CLOCKS_CLK_USB_CTRL_ENABLE_MASK;
 
-	while( !(clocks->clk_usb_selected & 0x1) )
-		continue;
-	
 	//Change divider to 1.0
-	clocks -> clk_sys_div  =  0x00000100; //1.0
+	clocks -> clk_usb_div  = CLOCKS_CLK_USB_DIV_INT(1);
 	
 	/*
 	 * USB Config
@@ -555,8 +552,7 @@ void configure_usbcdc()
 	//Enable USB IRQ (5) and set priority, clear pending for good measure
 	((uint32_t *)(0x20000000))[16+5]= (uint32_t)ISR5;
 	m0plus -> nvic_iser = M0PLUS_NVIC_ISER_SETENA(1<<5);
-//TODO: this needs to use masking.
-	m0plus -> nvic_ipr1 = M0PLUS_NVIC_IPR1_IP_5(USB_IRQ_PRIORITY); 
+	m0plus -> nvic_ipr1 = (m0plus -> nvic_ipr1 & ~M0PLUS_NVIC_IPR1_IP_5_MASK) |  M0PLUS_NVIC_IPR1_IP_5(USB_IRQ_PRIORITY); 
 	m0plus -> nvic_icpr = M0PLUS_NVIC_ICPR_CLRPEND(1<<5);
 
 	//connect usb to phy (should be by default)
